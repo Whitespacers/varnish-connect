@@ -56,12 +56,17 @@ class Socket {
 		fclose($this->fp);
 	}
 
-	public function getBanList() {
+	public function getBanList($maxItems = 0) {
 		$this->checkAuth();
-		$response = $this->write('ban.list', self::CLIS_OK);
+		$response = $this->write('ban.list', self::CLIS_OK | self::CLIS_TRUNCATED);
 		$banlist = array();
+		$count = 0;
 
-		for ($a = 1; $a < count($response['message']); $a += 1) {
+		if ($maxItems === 0) {
+			$maxItems = count($response['message']);
+		}
+
+		for ($a = 1; $a < count($response['message']) && $a < $maxItems; $a += 1) {
 			preg_match('/([\d\.]+)\s+(\d+)\s([CRO-]+) +(0x[^ ]+)?(.+)?/', $response['message'][$a], $match);
 
 			if (count($match) === 6) {
@@ -75,6 +80,8 @@ class Socket {
 					'pointer' => (!empty($match[4]) ? $match[4] : null),
 					'spec' => trim($match[5])
 				);
+
+				$count += 1;
 			}
 		}
 
@@ -133,7 +140,11 @@ class Socket {
 
 		$response = $this->parseResponse($response);
 
-		if (empty($expectedResponseCode) || $response['code'] === $expectedResponseCode) {
+		if (
+			empty($expectedResponseCode) ||
+			$expectedResponseCode === $response['code'] ||
+			($expectedResponseCode & $response['code'])
+		) {
 			return $response;
 		} else {
 			throw new \Exception('Invalid response from server');
