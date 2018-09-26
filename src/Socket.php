@@ -67,7 +67,7 @@ class Socket {
 		}
 
 		for ($a = 1; $a < count($response['message']) && $a < $maxItems; $a += 1) {
-			preg_match('/([\d\.]+)\s+(\d+)\s([CRO-]+) +(0x[^ ]+)?(.+)?/', $response['message'][$a], $match);
+			preg_match('/([\d\.]+)\s+(\d+)\s([CRO-\s]+) +(0x[^ ]+)?(.+)?/', $response['message'][$a], $match);
 
 			if (count($match) === 6) {
 				$flags = str_split(trim(str_replace('-', '', $match[3])));
